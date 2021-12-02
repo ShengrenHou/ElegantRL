@@ -39,7 +39,7 @@ class ActorPPO(nn.Module):
         a_avg = self.net(state)
         a_std = self.a_logstd.exp()
 
-        delta = ((a_avg - action) / a_std).pow(2) * 0.5
+        delta = ((a_avg - action) / a_std).pow(2) * 0.5# 
         logprob = -(self.a_logstd + self.sqrt_2pi_log + delta).sum(1)  # new_logprob
 
         dist_entropy = (logprob.exp() * logprob).mean()  # policy entropy
@@ -143,8 +143,8 @@ class AgentPPO:
         state = self.state
         last_done = 0
         for i in range(target_step):
-            action, noise = self.select_action(state)
-            next_state, reward, done, _ = env.step(np.tanh(action))
+            action, noise = self.select_action(state)#here return np values of action and noise
+            next_state, reward, done, _ = env.step(np.tanh(action))# why add another tanh here. 
             trajectory_temp.append((state, reward, done, action, noise))
             if done:
                 state = env.reset()
@@ -176,7 +176,7 @@ class AgentPPO:
 
         '''PPO: Surrogate objective of Trust Region'''
         obj_critic = obj_actor = None
-        for _ in range(int(buf_len / batch_size * repeat_times)):
+        for _ in range(int(buf_len / batch_size * repeat_times)):# update repreat_times*1600/256 times for each buffer
             indices = torch.randint(buf_len, size=(batch_size,), requires_grad=False, device=self.device)
 
             state = buf_state[indices]
@@ -276,7 +276,7 @@ class Arguments:
 
         self.cwd = None  # current work directory. None means set automatically
         self.if_remove = True  # remove the cwd folder? (True, False, None:ask me)
-        self.break_step = 2 ** 20  # break training after 'total_step > break_step'
+        self.break_step = 2 ** 21  # break training after 'total_step > break_step'
         self.if_allow_break = True  # allow break training when reach goal (early termination)
 
         self.visible_gpu = '0'  # for example: os.environ['CUDA_VISIBLE_DEVICES'] = '0, 2,'
@@ -366,6 +366,7 @@ def train_and_evaluate(args, agent_id=0):
     del args
 
     agent.state = env.reset()
+    # agent.state=[1000,2000,3000]
 
     if_train = True
     while if_train:
@@ -542,13 +543,13 @@ def demo_continuous_action():
     if_train_pendulum = 1
     if if_train_pendulum:
         "TotalStep: 4e5, TargetReward: -200, UsedTime: 400s"
-        args.env = PreprocessEnv(env=gym.make('Pendulum-v0'))  # env='Pendulum-v0' is OK.
+        args.env = PreprocessEnv(env=gym.make('Pendulum-v1'))  # env='Pendulum-v0' is OK.
         args.env.target_return = -200  # set target_reward manually for env 'Pendulum-v0'
         args.reward_scale = 2 ** -3  # RewardRange: -1800 < -200 < -50 < 0
         args.gamma = 0.97
-        args.net_dim = 2 ** 7
-        args.batch_size = args.net_dim * 2
-        args.target_step = args.env.max_step * 8
+        args.net_dim = 2 ** 7# 128
+        args.batch_size = args.net_dim * 2# 256
+        args.target_step = args.env.max_step * 8 # 1600=200*8
 
     if_train_lunar_lander = 0
     if if_train_lunar_lander:
@@ -591,5 +592,5 @@ def demo_discrete_action():
 
 
 if __name__ == '__main__':
-    # demo_continuous_action()
-    demo_discrete_action()
+    demo_continuous_action()
+    # demo_discrete_action()
