@@ -17,8 +17,10 @@ class ActorSAC(nn.Module):
         super().__init__()
         self.net_state = nn.Sequential(nn.Linear(state_dim, mid_dim), nn.ReLU(),
                                        nn.Linear(mid_dim, mid_dim), nn.ReLU(), )
+       
         self.net_a_avg = nn.Sequential(nn.Linear(mid_dim, mid_dim), nn.Hardswish(),
                                        nn.Linear(mid_dim, action_dim))  # the average of action
+       
         self.net_a_std = nn.Sequential(nn.Linear(mid_dim, mid_dim), nn.Hardswish(),
                                        nn.Linear(mid_dim, action_dim))  # the log_std of action
         self.log_sqrt_2pi = np.log(np.sqrt(2 * np.pi))
@@ -26,7 +28,7 @@ class ActorSAC(nn.Module):
     def forward(self, state):
         tmp = self.net_state(state)
         return self.net_a_avg(tmp).tanh()  # action
-
+    '''sac get action first get gussian distribution based on what na '''
     def get_action(self, state):
         t_tmp = self.net_state(state)
         a_avg = self.net_a_avg(t_tmp)  # NOTICE! it is a_avg without .tanh()
